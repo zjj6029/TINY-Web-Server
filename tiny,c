@@ -1,1 +1,76 @@
 #include "csapp.h"
+
+void doit(int fd);
+void read_requesthdrs(rio_t *rp);
+int parse_uri(char *uri,  char *filename,  char *cgiargs);
+void serve_static(int fd,  char *filename, int filesize);
+void get_filetype(char *filename, char *filetype);
+void serve_dynamic(int fd, char *filename, char *cgiargs);
+void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg);
+
+
+int main(int argc, char**argv)
+{
+  int listenfd, connfd, port, clientlen;
+  struct sockaddr_in clientaddr;
+  
+  if(argc != 2){
+    fprintf(stderr,"usage: %s <port>\n",argv[0]);
+    exit(1);
+  }
+  
+  port = atoi(argv[1]);  //ascii to integer
+  
+  listenfd = Open_listenfd(port);  //打开一个监听套接字
+  
+  while(1)
+  {
+    clientlen = sizeof(clientaddr);
+    connfd = Accept(listenfd,(SA*)&clientaddr, &clientlen);  
+    doit(connfd);   //处理一个HTTP事务
+    Close(connfd);   //关闭已连接套接字
+  }
+  
+}
+
+void doit(int fd)
+{
+  int is_static;
+  struct stat sbuf;
+  char buf[MAXLINE],method[MAXLINE],uri[MAXLINE],version[MAXLINE];
+  char filename[MAXLINE], cgiargs[MAXLINE];
+  rio_t rio;  //rio数据结构
+  
+  //Read request line and headers  读取请求行和报头
+  Rio_readinitb(&rio, fd);  //将文件描述符与rio数据结构绑定
+  Rio_readlineb(&rio, buf, MAXLINE);
+  sscanf(buf, "%s, %s, %s", method, uri, version);
+  if(strcasecmp(method,"GET"))
+  {
+    clienterror(fd,method,"501","Not Implemented","Tiny does not implement this method");
+    return;
+  }
+  read_requesthdrs(&rio);  //读取请求头
+  
+  //parse URI from GET request
+  is_static = parse_uri(uri, filename, cgiargs);
+  if(stat(filename, &sbuf)<0){  //获取文件元数据
+    clienterror(fd,filename,"404","Not Found","Tiny couldn't read the file");
+    return;  
+  }
+  
+  if(is_static)
+  {
+    if(){
+    
+    }
+    serve_static(fd,filename,sbuf.st_size);
+  }
+  else
+  {
+  
+  }
+}
+
+
+
