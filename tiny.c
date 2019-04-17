@@ -8,7 +8,7 @@ void get_filetype(char *filename, char *filetype);
 void serve_dynamic(int fd, char *filename, char *cgiargs);
 void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg);
 
-
+//主函数
 int main(int argc, char**argv)
 {
   int listenfd, connfd, port, clientlen;
@@ -33,6 +33,7 @@ int main(int argc, char**argv)
   
 }
 
+//HTTP事务处理函数
 void doit(int fd)
 {
   int is_static;
@@ -79,7 +80,7 @@ void doit(int fd)
   }
 }
 
-
+//错误响应函数
 void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg)
 {
   char buf[MAXLINE], body[MAXBUF];
@@ -102,7 +103,7 @@ void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longms
   Rio_writen(fd,body,strlen(buf));
 }
 
-
+//报头处理函数
 void read_requesthdrs(rio_t *rp)
 {
   char buf[MAXLINE];
@@ -115,6 +116,7 @@ void read_requesthdrs(rio_t *rp)
   return;
 }
 
+//uri处理函数
 int parse_uri(char *uri, char *filename, char *cgiargs)
 {
   char *ptr;
@@ -143,6 +145,7 @@ int parse_uri(char *uri, char *filename, char *cgiargs)
   }
 }
 
+//
 
 
 
