@@ -145,8 +145,48 @@ int parse_uri(char *uri, char *filename, char *cgiargs)
   }
 }
 
-//
+//静态内容函数
+void server_static(int fd, char *filename, int filesize)
+{
+  int srcfd;
+  char *srcp, filetype[MAXLINE], buf[MAXBUF];
+  
+  //Send reponse header to client
+  get_filetype();
+  sprintf(buf, "HTTP/1.0 200 OK\r\n");
+  sprintf(buf,"%sServer: Tiny Web Server\r\n",buf);
+  sprintf(buf,"%sContent-length: %d\r\n",buf,filesize);
+  sprintf(buf,"%sContent-type: %s\r\n\r\n",buf,filetype);
+  Rio_writen(fd,buf,strlen(buf));
+  
+  //Send response body to client
+  srcfd = Open(filename,O_RDONLY,0);
+  srcp = Mmap(0, filesize, PROT_READ, MAP_PRIVATE, srcfd, 0);  //将文件映射到存储器，不再需要fd；
+  Close(srcfd);  //关闭fd
+  Rio_writen(fd,srcp,filesize);
+  Munmap(srcp,filesize);//必须将映射到存储器的内容释放，以避免内存泄漏；
+}
+          
 
+void get_filetype(char *filename, char *filetype)
+{
+  if(strstr(filename, ".html"))
+    strcpy(filetype,"text/html");
+  else if(strstr(filename,".gif"))
+    strcpy(filetype,"image/gif");
+  else if(strstr(filename,".jpg"))
+    strcpy(filetype,"image/jpeg");
+  else
+    strcpy(filetype,"text/plain");
+}
 
+          
+//动态内容函数
+void serve_dynamic(int fd, char *filename, char *cgiargs)
+{
+  char buf[], *emptylist[] = {NULL}; 
+  
+  //return
+}
 
 
