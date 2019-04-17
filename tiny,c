@@ -42,7 +42,7 @@ void doit(int fd)
   rio_t rio;  //rio数据结构
   
   //Read request line and headers  读取请求行和报头
-  Rio_readinitb(&rio, fd);  //将文件描述符与rio数据结构绑定
+  Rio_readinitb(&rio, fd);  //将文件描述符与rio数据结构的缓冲区绑定起来
   Rio_readlineb(&rio, buf, MAXLINE);
   sscanf(buf, "%s, %s, %s", method, uri, version);
   if(strcasecmp(method,"GET"))
@@ -97,8 +97,53 @@ void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longms
   Rio_writen(fd,buf,strlen(buf));
   sprintf(buf, "Conten-type: text/html\r\n");
   Rio_writen(fd,buf,strlen(buf));
-  
+  sprintf(buf,"Content-length: %d\r\n\r\n",(int)strlen(body);
+  Rio_writen(fd,buf,strlen(buf));
+  Rio_writen(fd,body,strlen(buf));
 }
+
+
+void read_requesthdrs(rio_t *rp)
+{
+  char buf[MAXLINE];
+  
+  Rio_readlineb(rp,buf,MAXLINE);
+  while(strcmp(buf,"\r\n")){
+    Rio_readlineb(rp,buf,MAXLINE);
+    printf("%s",buf);
+  }
+  return;
+}
+
+int parse_uri(char *uri, char *filename, char *cgiargs)
+{
+  char *ptr;
+  
+  if(!strstr(uri,"cgi-bin"))  //static content
+  {
+    strcpy(cgiargs,"");
+    strcpy(filename,".");
+    strcat(filename,uri);
+    if(uri[strlen(uri)-1] =='/')
+      strcat(filename, "home.html");
+    return 1;
+    
+  }
+  else{  //dynamic content
+    ptr = index(uri, '?');
+    if(ptr){
+      strcpy(cgiargs, ptr+1);
+      *ptr = '\0';
+    }
+    else
+      strcpy(cgiargs,"");
+    strcpy(filename,".");
+    strcpy(filename,uri);
+    return 0;
+  }
+}
+
+
 
 
 
